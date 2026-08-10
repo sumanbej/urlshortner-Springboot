@@ -1,8 +1,10 @@
 package com.urlshortner.urlshortnerproject.Service;
 
+import com.urlshortner.urlshortnerproject.Model.Url;
+
 public interface UrlService {
-    public Url generateShortLink(UrlDto urlDto);
-    public Url persistShortLink(Url url);
-    public Url getEncodedUrl(String url);
-    public  void  deleteShortLink(Url url);
+    Url generateShortLink(UrlDto urlDto);
+    Url persistShortLink(Url url);
+    Url getEncodedUrl(String url);
+    void deleteShortLink(Url url);
 }
