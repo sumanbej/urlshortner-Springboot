@@ -1,6 +1,7 @@
 package com.urlshortner.urlshortnerproject.Service;
 
 import com.urlshortner.urlshortnerproject.Model.Url;
+import com.urlshortner.urlshortnerproject.Model.UrlDto;
 
 public interface UrlService {
     Url generateShortLink(UrlDto urlDto);
