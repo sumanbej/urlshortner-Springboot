@@ -5,9 +5,10 @@ import com.urlshortner.urlshortnerproject.Model.UrlDto;
 import com.google.common.hash.Hashing;
 import com.urlshortner.urlshortnerproject.Model.UrlResponseDto;
 import com.urlshortner.urlshortnerproject.Repository.UrlRepo;
+import com.urlshortner.urlshortnerproject.Exception.UrlNotFoundException;
+import com.urlshortner.urlshortnerproject.Util.UrlValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -16,11 +17,11 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class UrlServiceImpl implements UrlService{
     private final UrlRepo urlRepository;
+    
     @Override
     public UrlResponseDto generateShortLink(UrlDto urlDto) {
-        if(StringUtils.isEmpty(urlDto.getOriginalUrl())){
-            throw new IllegalArgumentException("URL cannot be empty");
-        }
+        UrlValidator.validateUrl(urlDto.getOriginalUrl());
+        
         String originalUrl = urlDto.getOriginalUrl();
 
         if (!originalUrl.startsWith("http://") &&
@@ -52,16 +53,19 @@ public class UrlServiceImpl implements UrlService{
 
     @Override
     public Url getEncodedUrl(String url) {
-        return urlRepository.findByShortLink(url);
-
+        Url result = urlRepository.findByShortLink(url);
+        if (result == null) {
+            throw new UrlNotFoundException("Short URL not found: " + url);
+        }
+        return result;
     }
 
     @Override
     public void deleteShortLink(Url url) {
-    urlRepository.delete(url);
+        urlRepository.delete(url);
     }
-    private String encodeUrl(String url)
-    {
+    
+    private String encodeUrl(String url) {
         String encodedUrl = "";
         LocalDateTime time = LocalDateTime.now();
         encodedUrl = Hashing.murmur3_32()
