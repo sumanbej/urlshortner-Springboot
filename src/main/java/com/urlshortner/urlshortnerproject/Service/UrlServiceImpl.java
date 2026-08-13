@@ -3,6 +3,7 @@ package com.urlshortner.urlshortnerproject.Service;
 import com.urlshortner.urlshortnerproject.Model.Url;
 import com.urlshortner.urlshortnerproject.Model.UrlDto;
 import com.google.common.hash.Hashing;
+import com.urlshortner.urlshortnerproject.Model.UrlResponseDto;
 import com.urlshortner.urlshortnerproject.Repository.UrlRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -16,19 +17,30 @@ import java.time.LocalDateTime;
 public class UrlServiceImpl implements UrlService{
     private final UrlRepo urlRepository;
     @Override
-    public Url generateShortLink(UrlDto urlDto) {
+    public UrlResponseDto generateShortLink(UrlDto urlDto) {
         if(StringUtils.isEmpty(urlDto.getOriginalUrl())){
             throw new IllegalArgumentException("URL cannot be empty");
         }
-        String shortUrl=encodeUrl(urlDto.getOriginalUrl());
-        Url urlToPersist=new Url();
-        urlToPersist= Url.builder()
-                .originalUrl(urlDto.getOriginalUrl())
-                .shortLink(shortUrl)
-                .creationDate(LocalDateTime.now())
-                .expirationDate(LocalDateTime.now().plusDays(7))
+        String originalUrl = urlDto.getOriginalUrl();
+
+        if (!originalUrl.startsWith("http://") &&
+                !originalUrl.startsWith("https://")) {
+            originalUrl = "https://" + originalUrl;
+        }
+        String shortUrl=encodeUrl(originalUrl);
+        Url url = persistShortLink(
+                Url.builder()
+                        .originalUrl(originalUrl)
+                        .shortLink(shortUrl)
+                        .creationDate(LocalDateTime.now())
+                        .expirationDate(LocalDateTime.now().plusDays(7))
+                        .build());
+
+       return UrlResponseDto.builder()
+                .originalUrl(url.getOriginalUrl())
+                .shortUrl(url.getShortLink())
+                .expirationTime(url.getExpirationDate())
                 .build();
-        return urlToPersist;
 
     }
 
@@ -40,8 +52,8 @@ public class UrlServiceImpl implements UrlService{
 
     @Override
     public Url getEncodedUrl(String url) {
-        Url urlToRet = urlRepository.findByShortLink(url);
-        return urlToRet;
+        return urlRepository.findByShortLink(url);
+
     }
 
     @Override
@@ -57,4 +69,5 @@ public class UrlServiceImpl implements UrlService{
                 .toString();
         return  encodedUrl;
     }
+
 }
